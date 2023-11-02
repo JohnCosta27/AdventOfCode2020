@@ -6,6 +6,27 @@ import (
 	"strings"
 )
 
+var THREE_SIMPLE_RULE = `
+func Rule%s(message string, index *int) error {
+  err := Rule%s(message, index)
+  if err != nil {
+    return err
+  }
+
+  err = Rule%s(message, index)
+  if err != nil {
+    return err
+  }
+
+  err = Rule%s(message, index)
+  if err != nil {
+    return err
+  }
+
+  return nil
+}
+`
+
 var SIMPLE_RULE = `
 func Rule%s(message string, index *int) error {
   err := Rule%s(message, index)
@@ -52,6 +73,10 @@ func Rule%s(message string, index *int) error {
 
 var LITERAL_RULE = `
 func Rule%s(message string, index *int) error {
+  if len(message) <= *index {
+    return errors.New("out of bounds")
+  }
+
   if string(message[*index]) == "%c" {
     *index++
     return nil
@@ -104,6 +129,15 @@ func main() {
 
   rules := strings.Split(splitInput[0], "\n")
   for _, v := range rules {
+    
+    /*
+    if v == "8: 42" {
+      v = "8: 42 | 42 8"
+    } else if v == "11: 42 31" {
+      v = "11: 42 31 | 42 11 31"
+    }
+    */
+
     program += CreateRule(v)
   }
 
@@ -134,7 +168,9 @@ func CreateSingleRule(ruleNumber string, rule string) string {
 
   nums := strings.Split(rule, " ")
 
-  if len(nums) > 1 {
+  if len(nums) == 3 {
+    return fmt.Sprintf(THREE_SIMPLE_RULE, ruleNumber, nums[0], nums[1], nums[2])
+  } else if (len(nums) == 2) {
     return fmt.Sprintf(SIMPLE_RULE, ruleNumber, nums[0], nums[1])
   }
 
